@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Cadastro de Leads</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Tela 1: Cadastro do Usuário -->
+        <div id="tela-usuario" class="tela active">
+            <div class="card">
+                <h1>Sistema de Cadastro de Leads</h1>
+                <p>Cadastre-se primeiro para começar!</p>
+                
+                <form id="form-usuario">
+                    <div class="form-group">
+                        <label for="nome-usuario">Nome Completo:</label>
+                        <input type="text" id="nome-usuario" name="nome" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email-usuario">E-mail:</label>
+                        <input type="email" id="email-usuario" name="email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="telefone-usuario">Telefone:</label>
+                        <input type="tel" id="telefone-usuario" name="telefone" required placeholder="(11) 99999-9999">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Próximo Passo</button>
+                </form>
+                
+                <div id="loading-usuario" class="loading hidden">
+                    <div class="spinner"></div>
+                    <p>Processando cadastro...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 2: Cadastro dos Leads - Novo Design -->
+        <div id="tela-leads" class="tela">
+            <header class="leads-header">
+                <h1 class="leads-main-title">
+                    Liberte a <span class="highlight">genia</span> da lâmpada e <span class="highlight">ganhe prêmios</span>
+                </h1>
+            </header>
+            
+            <div class="leads-content">
+                <!-- Lado Esquerdo - Lâmpada -->
+                <div class="leads-left-side">
+                    <div class="lamp-container">
+                        <img src="lampada.png" alt="Lâmpada Mágica" class="lamp-image">
+                    </div>
+                </div>
+                
+                <!-- Lado Direito - Formulário -->
+                <div class="leads-right-side">
+                    <div class="leads-form-container">
+                        <p class="leads-subtitle">Indique 3 contatos para ter a chance de ganhar brindes!</p>
+                        <p class="info-referencia">Referência: <span id="nome-referencia"></span></p>
+                        
+                        <form id="form-leads">
+                            <div id="container-leads">
+                                <!-- Os campos de leads serão adicionados dinamicamente -->
+                            </div>
+                            
+                            <div class="leads-actions">
+                                <button type="button" id="btn-adicionar-lead" class="btn btn-secondary">+ Adicionar Lead</button>
+                                <div class="counter">Leads cadastrados: <span id="contador-leads">3</span>/5</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary leads-submit-btn">Finalizar e Sortear Prêmio</button>
+                        </form>
+                        
+                        <div id="loading-leads" class="loading hidden">
+                            <div class="spinner"></div>
+                            <p>Cadastrando leads...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela 3: Roleta de Prêmios -->
+        <div id="tela-roleta" class="tela">
+            <div class="card">
+                <h1>🎊 Hora do Sorteio!</h1>
+                <p>Clique em "Girar Roleta" para descobrir seu prêmio!</p>
+                
+                <div class="roleta-container">
+                    <div class="roleta-wrapper">
+                        <div class="indicador">▶</div>
+                        <div id="roleta" class="roleta">
+                            <!-- Os prêmios serão inseridos dinamicamente -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="roleta-actions">
+                    <button id="btn-girar" class="btn btn-success">🎲 Girar Roleta</button>
+                    <button id="btn-reiniciar" class="btn btn-secondary hidden">🔄 Novo Cadastro</button>
+                </div>
+                
+                <div id="resultado-premio" class="resultado hidden">
+                    <h2>🏆 Parabéns!</h2>
+                    <p id="texto-premio"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso -->
+    <div id="success-modal" class="modal hidden">
+        <div class="modal-content success-content">
+            <div class="lamp-animation">🪔✨</div>
+            <h2>🎉 Parabéns!</h2>
+            <p>Seus contatos foram enviados com sucesso!</p>
+            <p class="prize-text">Aguarde o sorteio dos prêmios!</p>
+            <button id="close-modal" class="btn-close">Fechar</button>
+        </div>
+    </div>
+
+    <!-- Modal de Erro -->
+    <div id="modal-erro" class="modal hidden">
+        <div class="modal-content error-content">
+            <h3>❌ Erro</h3>
+            <p id="texto-erro"></p>
+            <button id="btn-fechar-erro" class="btn-close">Fechar</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
