@@ -3,135 +3,161 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Cadastro de Leads</title>
+    <title>Liberte a Gênia da Lâmpada</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <!-- Tela 1: Cadastro do Usuário -->
-        <div id="tela-usuario" class="tela active">
-            <div class="card">
-                <h1>Sistema de Cadastro de Leads</h1>
-                <p>Cadastre-se primeiro para começar!</p>
-                
-                <form id="form-usuario">
-                    <div class="form-group">
-                        <label for="nome-usuario">Nome Completo:</label>
-                        <input type="text" id="nome-usuario" name="nome" required>
+        <!-- Tela 1: Cadastro de Leads -->
+        <div id="tela-cadastro" class="tela active">
+            <div class="main-content">
+                <!-- Lado Esquerdo - Título e Lâmpada -->
+                <div class="left-section">
+                    <div class="title-section">
+                        <h1 class="main-title">
+                            LIBERTE A <span class="highlight">GÊN.IA</span><br>
+                            DA LÂMPADA E<br>
+                            <span class="highlight">GANHE PRÊMIOS</span>
+                        </h1>
+                        <p class="subtitle">Indique 3 contatos para ter a chance de ganhar brindes!</p>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="email-usuario">E-mail:</label>
-                        <input type="email" id="email-usuario" name="email" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="telefone-usuario">Telefone:</label>
-                        <input type="tel" id="telefone-usuario" name="telefone" required placeholder="(11) 99999-9999">
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Próximo Passo</button>
-                </form>
-                
-                <div id="loading-usuario" class="loading hidden">
-                    <div class="spinner"></div>
-                    <p>Processando cadastro...</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tela 2: Cadastro dos Leads - Novo Design -->
-        <div id="tela-leads" class="tela">
-            <header class="leads-header">
-                <h1 class="leads-main-title">
-                    Liberte a <span class="highlight">genia</span> da lâmpada e <span class="highlight">ganhe prêmios</span>
-                </h1>
-            </header>
-            
-            <div class="leads-content">
-                <!-- Lado Esquerdo - Lâmpada -->
-                <div class="leads-left-side">
                     <div class="lamp-container">
-                        <img src="lampada.png" alt="Lâmpada Mágica" class="lamp-image">
+                        <img src="lampada_magica.png" alt="Lâmpada Mágica" class="lamp-image" id="lamp-image">
+                        <div class="lamp-glow"></div>
                     </div>
                 </div>
                 
                 <!-- Lado Direito - Formulário -->
-                <div class="leads-right-side">
-                    <div class="leads-form-container">
-                        <p class="leads-subtitle">Indique 3 contatos para ter a chance de ganhar brindes!</p>
-                        <p class="info-referencia">Referência: <span id="nome-referencia"></span></p>
-                        
-                        <form id="form-leads">
-                            <div id="container-leads">
-                                <!-- Os campos de leads serão adicionados dinamicamente -->
+                <div class="right-section">
+                    <div class="form-container">
+                        <form id="form-indicacoes">
+                            <!-- Indicação 1 -->
+                            <div class="indicacao-group">
+                                <h3 class="indicacao-title">Indicação 1</h3>
+                                <div class="form-group">
+                                    <input type="text" id="nome1" name="nome1" placeholder="Nome Completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="tel" id="telefone1" name="telefone1" placeholder="Telefone" required>
+                                </div>
                             </div>
                             
-                            <div class="leads-actions">
-                                <button type="button" id="btn-adicionar-lead" class="btn btn-secondary">+ Adicionar Lead</button>
-                                <div class="counter">Leads cadastrados: <span id="contador-leads">3</span>/5</div>
+                            <!-- Indicação 2 -->
+                            <div class="indicacao-group">
+                                <h3 class="indicacao-title">Indicação 2</h3>
+                                <div class="form-group">
+                                    <input type="text" id="nome2" name="nome2" placeholder="Nome Completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="tel" id="telefone2" name="telefone2" placeholder="Telefone" required>
+                                </div>
                             </div>
                             
-                            <button type="submit" class="btn btn-primary leads-submit-btn">Finalizar e Sortear Prêmio</button>
+                            <!-- Indicação 3 -->
+                            <div class="indicacao-group">
+                                <h3 class="indicacao-title">Indicação 3</h3>
+                                <div class="form-group">
+                                    <input type="text" id="nome3" name="nome3" placeholder="Nome Completo" required>
+                                </div>
+                                <div class="form-group">
+                                    <input type="tel" id="telefone3" name="telefone3" placeholder="Telefone" required>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="submit-btn">Faça seu pedido!</button>
+                            
+                            <!-- Botões de teste -->
+                            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                                <button type="button" onclick="showScreen('tela-negativo')" style="padding: 10px; background: #ff4757; color: white; border: none; border-radius: 5px;">Teste Negativo</button>
+                                <button type="button" onclick="showScreen('tela-lampada')" style="padding: 10px; background: #00D4AA; color: white; border: none; border-radius: 5px;">Teste Lâmpada</button>
+                            </div>
                         </form>
-                        
-                        <div id="loading-leads" class="loading hidden">
-                            <div class="spinner"></div>
-                            <p>Cadastrando leads...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tela 2: Resultado Negativo -->
+        <div id="tela-negativo" class="tela">
+            <div class="result-content">
+                <div class="lamp-background">
+                    <img src="lampada_magica.png" alt="Lâmpada Mágica" class="lamp-bg">
+                </div>
+                
+                <div class="result-modal">
+                    <div class="user-icon">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="12" cy="12" r="10" stroke="#00D4AA" stroke-width="2"/>
+                            <circle cx="12" cy="8" r="3" stroke="#00D4AA" stroke-width="2"/>
+                            <path d="M6 20c0-4 3-6 6-6s6 2 6 6" stroke="#00D4AA" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    
+                    <h2 class="result-title">Infelizmente,<br>não foi dessa vez</h2>
+                    <p class="result-subtitle">Mas não desista! Consiga mais<br>3 indicações e tente de novo</p>
+                    
+                    <button class="back-btn" onclick="voltarInicio()">Voltar</button>
+                    
+                    <div class="progress-section">
+                        <p class="progress-label">Progresso mágico</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                        <p class="progress-percent">75%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tela 3: Esfregue a Lâmpada -->
+        <div id="tela-lampada" class="tela">
+            <div class="lamp-interaction-content">
+                <div class="lamp-section">
+                    <div class="interactive-lamp-container">
+                        <img src="lampada_magica.png" alt="Lâmpada Mágica" class="interactive-lamp" id="interactive-lamp">
+                        <div class="lamp-sparkles"></div>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <p class="progress-label">Progresso mágico</p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 75%"></div>
+                        </div>
+                        <p class="progress-percent">75%</p>
+                    </div>
+                </div>
+                
+                <div class="interaction-section">
+                    <h2 class="interaction-title">ESFREGUE<br><span class="highlight">A LÂMPADA!</span></h2>
+                    <p class="interaction-subtitle">Mova o cursor sobre a lâmpada mágica!</p>
+                    
+                    <div class="prizes-container">
+                        <div class="prize-option" data-prize="10% DE DESCONTO">
+                            <span>10% DE DESCONTO<br>NA ADESÃO</span>
+                        </div>
+                        <div class="prize-option" data-prize="NÃO FOI DESSA VEZ">
+                            <span>NÃO FOI<br>DESSA VEZ</span>
+                        </div>
+                        <div class="prize-option" data-prize="UMA CANETA">
+                            <span>UMA CANETA</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Tela 3: Roleta de Prêmios -->
-        <div id="tela-roleta" class="tela">
-            <div class="card">
-                <h1>🎊 Hora do Sorteio!</h1>
-                <p>Clique em "Girar Roleta" para descobrir seu prêmio!</p>
-                
-                <div class="roleta-container">
-                    <div class="roleta-wrapper">
-                        <div class="indicador">▶</div>
-                        <div id="roleta" class="roleta">
-                            <!-- Os prêmios serão inseridos dinamicamente -->
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="roleta-actions">
-                    <button id="btn-girar" class="btn btn-success">🎲 Girar Roleta</button>
-                    <button id="btn-reiniciar" class="btn btn-secondary hidden">🔄 Novo Cadastro</button>
-                </div>
-                
-                <div id="resultado-premio" class="resultado hidden">
-                    <h2>🏆 Parabéns!</h2>
-                    <p id="texto-premio"></p>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <!-- Modal de Sucesso -->
-    <div id="success-modal" class="modal hidden">
-        <div class="modal-content success-content">
-            <div class="lamp-animation">🪔✨</div>
-            <h2>🎉 Parabéns!</h2>
-            <p>Seus contatos foram enviados com sucesso!</p>
-            <p class="prize-text">Aguarde o sorteio dos prêmios!</p>
-            <button id="close-modal" class="btn-close">Fechar</button>
-        </div>
-    </div>
-
-    <!-- Modal de Erro -->
-    <div id="modal-erro" class="modal hidden">
-        <div class="modal-content error-content">
-            <h3>❌ Erro</h3>
-            <p id="texto-erro"></p>
-            <button id="btn-fechar-erro" class="btn-close">Fechar</button>
+    
+    <!-- Modal de Resultado Final -->
+    <div id="modal-resultado" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-icon">🎉</div>
+            <h3 id="modal-title">Parabéns!</h3>
+            <p id="modal-text">Você ganhou um prêmio!</p>
+            <button class="modal-btn" onclick="fecharModal()">Fechar</button>
         </div>
     </div>
 

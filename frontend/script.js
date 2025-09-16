@@ -1,482 +1,400 @@
-// Configurações da API
-const API_BASE = 'http://localhost:5000/api';
-
 // Variáveis globais
-let dadosCadastrador = null;
-let leadsCount = 3;
-let premiosDisponiveis = [];
+let currentScreen = 'tela-cadastro';
+let rubCount = 0;
+const maxRubs = 5;
 
 // Inicialização
 document.addEventListener('DOMContentLoaded', function() {
-    inicializarApp();
+    console.log('DOM carregado, inicializando app...');
+    initializeApp();
 });
 
-async function inicializarApp() {
-    try {
-        
-        // Carregar prêmios
-        await carregarPremios();
-        
-        // Configurar eventos
-        configurarEventos();
-        
-        // Criar campos iniciais de leads
-        criarCamposLeads(3);
-        
-        console.log('✅ App inicializado com sucesso!');
-    } catch (error) {
-        console.error('❌ Erro ao inicializar app:', error);
-        mostrarErro('Erro ao inicializar aplicação');
+function initializeApp() {
+    console.log('Inicializando aplicação...');
+    
+    // Event listeners
+    const formIndicacoes = document.getElementById('form-indicacoes');
+    console.log('Formulário encontrado:', formIndicacoes);
+    
+    if (formIndicacoes) {
+        formIndicacoes.addEventListener('submit', handleFormSubmit);
+        console.log('Event listener adicionado ao formulário');
     }
-}
-
-function configurarEventos() {
-    // Formulário do usuário
-    document.getElementById('form-usuario').addEventListener('submit', handleCadastroUsuario);
     
-    // Formulário dos leads
-    document.getElementById('form-leads').addEventListener('submit', handleCadastroLeads);
-    
-    // Botão adicionar lead
-    document.getElementById('btn-adicionar-lead').addEventListener('click', adicionarLead);
-    
-    // Botão girar roleta
-    document.getElementById('btn-girar').addEventListener('click', girarRoleta);
-    
-    // Botão reiniciar
-    document.getElementById('btn-reiniciar').addEventListener('click', reiniciarSistema);
-    
-    // Modal de erro
-    document.getElementById('btn-fechar-erro').addEventListener('click', fecharModalErro);
-}
-
-// === GERENCIAMENTO DE TELAS ===
-function mostrarTela(nomeTela) {
-    // Ocultar todas as telas
-    document.querySelectorAll('.tela').forEach(tela => {
-        tela.classList.remove('active');
+    // Máscara para telefone
+    const telefoneInputs = document.querySelectorAll('input[type="tel"]');
+    telefoneInputs.forEach(input => {
+        input.addEventListener('input', formatTelefone);
     });
     
-    // Mostrar tela específica
-    document.getElementById(nomeTela).classList.add('active');
+    // Interação com a lâmpada
+    const interactiveLamp = document.getElementById('interactive-lamp');
+    if (interactiveLamp) {
+        interactiveLamp.addEventListener('mouseover', handleLampHover);
+        interactiveLamp.addEventListener('click', handleLampClick);
+    }
+    
+    // Prize options
+    const prizeOptions = document.querySelectorAll('.prize-option');
+    prizeOptions.forEach(option => {
+        option.addEventListener('click', () => selectPrize(option.dataset.prize));
+    });
 }
 
-// === CADASTRO DO USUÁRIO ===
-async function handleCadastroUsuario(event) {
-    event.preventDefault();
+// Formatação de telefone
+function formatTelefone(e) {
+    let value = e.target.value.replace(/\D/g, '');
     
-    const loading = document.getElementById('loading-usuario');
-    const form = document.getElementById('form-usuario');
+    if (value.length <= 11) {
+        value = value.replace(/(\d{2})(\d)/, '($1) $2');
+        value = value.replace(/(\d{4,5})(\d{4})$/, '$1-$2');
+    }
     
-    try {
-        // Mostrar loading
-        form.style.display = 'none';
-        loading.classList.remove('hidden');
-        
-        // Coletar dados do formulário
-        const formData = new FormData(form);
-        const dadosUsuario = {
-            nome: formData.get('nome').trim(),
-            email: formData.get('email').trim(),
-            telefone: formData.get('telefone').trim()
-        };
-        
-        // Enviar para API
-        const response = await fetch(`${API_BASE}/cadastrar-usuario`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(dadosUsuario)
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.erro || 'Erro no cadastro');
+    e.target.value = value;
+}
+
+// Validação do formulário
+function validateForm() {
+    const requiredFields = document.querySelectorAll('#form-indicacoes input[required]');
+    let isValid = true;
+    
+    requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+            isValid = false;
+            field.style.borderColor = '#ff4757';
+        } else {
+            field.style.borderColor = 'transparent';
         }
-        
-        // Salvar dados do cadastrador
-        dadosCadastrador = result.cadastrador;
-        
-        // Atualizar interface
-        document.getElementById('nome-referencia').textContent = dadosCadastrador.nome;
-        
-        // Ir para próxima tela
-        mostrarTela('tela-leads');
-        console.log('✅ Usuário cadastrado:', dadosCadastrador);
-        
-    } catch (error) {
-        console.error('❌ Erro no cadastro do usuário:', error);
-        mostrarErro(error.message);
-        
-        // Restaurar formulário
-        form.style.display = 'block';
-        loading.classList.add('hidden');
-    }
+    });
+    
+    return isValid;
 }
 
-// === GERENCIAMENTO DE LEADS ===
-function criarCamposLeads(quantidade) {
-    const container = document.getElementById('container-leads');
-    container.innerHTML = '';
+// Submissão do formulário
+async function handleFormSubmit(e) {
+    e.preventDefault();
     
-    for (let i = 1; i <= quantidade; i++) {
-        criarCampoLead(i);
-    }
-    
-    atualizarContadorLeads();
-}
-
-function criarCampoLead(numero) {
-    const container = document.getElementById('container-leads');
-    
-    const leadGroup = document.createElement('div');
-    leadGroup.className = 'lead-group';
-    leadGroup.dataset.leadNumber = numero;
-    
-    leadGroup.innerHTML = `
-        <h3>
-            Lead ${numero}
-            ${numero > 3 ? `<button type="button" class="btn-remover" onclick="removerLead(${numero})">×</button>` : ''}
-        </h3>
-        
-        <div class="form-group">
-            <label for="nome-lead-${numero}">Nome:</label>
-            <input type="text" id="nome-lead-${numero}" name="nome-lead-${numero}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="email-lead-${numero}">E-mail:</label>
-            <input type="email" id="email-lead-${numero}" name="email-lead-${numero}" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="telefone-lead-${numero}">Telefone:</label>
-            <input type="tel" id="telefone-lead-${numero}" name="telefone-lead-${numero}" required placeholder="(11) 99999-9999">
-        </div>
-    `;
-    
-    container.appendChild(leadGroup);
-}
-
-function adicionarLead() {
-    if (leadsCount >= 5) {
-        mostrarErro('Máximo de 5 leads permitidos');
+    if (!validateForm()) {
+        showNotification('Por favor, preencha todos os campos obrigatórios.', 'error');
         return;
     }
     
-    leadsCount++;
-    criarCampoLead(leadsCount);
-    atualizarContadorLeads();
-    atualizarBotaoAdicionar();
-}
-
-function removerLead(numero) {
-    const leadGroup = document.querySelector(`[data-lead-number="${numero}"]`);
-    if (leadGroup) {
-        leadGroup.remove();
-        leadsCount--;
-        renumerarLeads();
-        atualizarContadorLeads();
-        atualizarBotaoAdicionar();
-    }
-}
-
-function renumerarLeads() {
-    const leadGroups = document.querySelectorAll('.lead-group');
-    leadGroups.forEach((group, index) => {
-        const novoNumero = index + 1;
-        group.dataset.leadNumber = novoNumero;
-        
-        // Atualizar título
-        const titulo = group.querySelector('h3');
-        const botaoRemover = titulo.querySelector('.btn-remover');
-        titulo.innerHTML = `Lead ${novoNumero}`;
-        
-        if (novoNumero > 3 && botaoRemover) {
-            titulo.appendChild(botaoRemover);
-            botaoRemover.setAttribute('onclick', `removerLead(${novoNumero})`);
-        }
-        
-        // Atualizar IDs e names dos inputs
-        const inputs = group.querySelectorAll('input');
-        inputs.forEach(input => {
-            const tipo = input.type === 'email' ? 'email' : (input.type === 'tel' ? 'telefone' : 'nome');
-            input.id = `${tipo}-lead-${novoNumero}`;
-            input.name = `${tipo}-lead-${novoNumero}`;
-        });
-        
-        // Atualizar labels
-        const labels = group.querySelectorAll('label');
-        labels.forEach(label => {
-            const input = label.nextElementSibling;
-            label.setAttribute('for', input.id);
-        });
-    });
-}
-
-function atualizarContadorLeads() {
-    document.getElementById('contador-leads').textContent = leadsCount;
-}
-
-function atualizarBotaoAdicionar() {
-    const btnAdicionar = document.getElementById('btn-adicionar-lead');
-    btnAdicionar.style.display = leadsCount >= 5 ? 'none' : 'inline-block';
-}
-
-// === CADASTRO DOS LEADS ===
-async function handleCadastroLeads(event) {
-    event.preventDefault();
-    
-    const loading = document.getElementById('loading-leads');
-    const form = document.getElementById('form-leads');
-    
-    try {
-        // Mostrar loading
-        form.style.display = 'none';
-        loading.classList.remove('hidden');
-        
-        // Coletar dados dos leads
-        const leads = [];
-        
-        for (let i = 1; i <= leadsCount; i++) {
-            const nome = document.getElementById(`nome-lead-${i}`).value.trim();
-            const email = document.getElementById(`email-lead-${i}`).value.trim();
-            const telefone = document.getElementById(`telefone-lead-${i}`).value.trim();
-            
-            if (nome && email && telefone) {
-                leads.push({ nome, email, telefone });
-            }
-        }
-        
-        // Validar quantidade mínima
-        if (leads.length < 3) {
-            throw new Error('É necessário cadastrar pelo menos 3 leads');
-        }
-        
-        // Enviar para API
-        const response = await fetch(`${API_BASE}/cadastrar-leads`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+    // Coleta os dados do formulário
+    const formData = new FormData(e.target);
+    const dados = {
+        indicacoes: [
+            {
+                nome: formData.get('nome1'),
+                telefone: formData.get('telefone1')
             },
-            body: JSON.stringify({
-                leads: leads,
-                referencia: dadosCadastrador.nome
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(result.erro || 'Erro no cadastro dos leads');
-        }
-        
-        // Ir para tela da roleta
-        mostrarTela('tela-roleta');
-        
-        
-        console.log('✅ Leads cadastrados:', result.leads_salvos);
-        
-    } catch (error) {
-        console.error('❌ Erro no cadastro dos leads:', error);
-        mostrarErro(error.message);
-        
-        // Restaurar formulário
-        form.style.display = 'block';
-        loading.classList.add('hidden');
-    }
-}
-
-// === ROLETA DE PRÊMIOS ===
-async function carregarPremios() {
-    try {
-        const response = await fetch(`${API_BASE}/premios`);
-        const result = await response.json();
-        
-        if (response.ok) {
-            premiosDisponiveis = result.premios;
-            criarRoleta();
-        }
-    } catch (error) {
-        console.error('❌ Erro ao carregar prêmios:', error);
-        // Usar prêmios padrão
-        premiosDisponiveis = ['Desconto 50%', 'Frete Grátis', 'Produto Grátis', 'Cashback 20%'];
-        criarRoleta();
-    }
-}
-
-function criarRoleta() {
-    const roleta = document.getElementById('roleta');
-    roleta.innerHTML = '';
-    
-    // Criar múltiplas cópias dos prêmios para dar efeito de roleta contínua
-    const premiosExtendidos = [];
-    for (let i = 0; i < 5; i++) {
-        premiosExtendidos.push(...premiosDisponiveis);
-    }
-    
-    premiosExtendidos.forEach((premio, index) => {
-        const premioItem = document.createElement('div');
-        premioItem.className = 'premio-item';
-        premioItem.textContent = premio;
-        premioItem.dataset.premio = premio;
-        premioItem.dataset.index = index;
-        roleta.appendChild(premioItem);
-    });
-}
-
-async function girarRoleta() {
-    const btnGirar = document.getElementById('btn-girar');
-    const btnReiniciar = document.getElementById('btn-reiniciar');
-    const roleta = document.getElementById('roleta');
-    const resultadoDiv = document.getElementById('resultado-premio');
-    
-    try {
-        // Desabilitar botão
-        btnGirar.disabled = true;
-        btnGirar.textContent = '🎲 Girando...';
-        
-        // Solicitar prêmio ao backend
-        const response = await fetch(`${API_BASE}/sortear-premio`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+            {
+                nome: formData.get('nome2'),
+                telefone: formData.get('telefone2')
+            },
+            {
+                nome: formData.get('nome3'),
+                telefone: formData.get('telefone3')
             }
-        });
+        ]
+    };
+    
+    try {
+        // Simula envio para o backend
+        showLoading(true);
+        await simulateApiCall(dados);
         
-        const result = await response.json();
+        // Decide o resultado (70% chance de sucesso)
+        const isSuccess = Math.random() > 0.3;
         
-        if (!response.ok) {
-            throw new Error(result.erro || 'Erro no sorteio');
+        if (isSuccess) {
+            showScreen('tela-lampada');
+        } else {
+            showScreen('tela-negativo');
         }
-        
-        const premioSorteado = result.premio;
-        
-        // Adicionar animação
-        roleta.classList.add('girando');
-        
-        // Aguardar animação e mostrar resultado
-        setTimeout(() => {
-            roleta.classList.remove('girando');
-            destacarPremio(premioSorteado);
-            mostrarResultado(premioSorteado);
-            
-            // Mostrar botão reiniciar
-            btnGirar.classList.add('hidden');
-            btnReiniciar.classList.remove('hidden');
-        }, 3000);
-        
-        console.log('🎊 Prêmio sorteado:', premioSorteado);
         
     } catch (error) {
-        console.error('❌ Erro no sorteio:', error);
-        mostrarErro(error.message);
-        
-        // Restaurar botão
-        btnGirar.disabled = false;
-        btnGirar.textContent = '🎲 Girar Roleta';
+        console.error('Erro ao enviar dados:', error);
+        showNotification('Erro ao processar sua solicitação. Tente novamente.', 'error');
+    } finally {
+        showLoading(false);
     }
 }
 
-function destacarPremio(premio) {
-    // Remover destaque anterior
-    document.querySelectorAll('.premio-item.destacado').forEach(item => {
-        item.classList.remove('destacado');
+// Simulação de chamada API
+function simulateApiCall(dados) {
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            console.log('Dados enviados:', dados);
+            resolve();
+        }, 2000);
+    });
+}
+
+// Interação com a lâmpada
+function handleLampHover(e) {
+    const lamp = e.target;
+    lamp.style.transform = 'scale(1.05) rotate(' + (Math.random() * 10 - 5) + 'deg)';
+    
+    // Adiciona efeito de partículas
+    createSparkles(lamp);
+}
+
+function handleLampClick(e) {
+    rubCount++;
+    
+    const lamp = e.target;
+    lamp.style.transform = 'scale(1.1) rotate(' + (Math.random() * 20 - 10) + 'deg)';
+    
+    // Efeito visual mais intenso
+    createMagicEffect(lamp);
+    
+    if (rubCount >= maxRubs) {
+        setTimeout(() => {
+            revealPrize();
+        }, 1000);
+    }
+}
+
+// Criação de efeitos visuais
+function createSparkles(element) {
+    const rect = element.getBoundingClientRect();
+    
+    for (let i = 0; i < 5; i++) {
+        const sparkle = document.createElement('div');
+        sparkle.className = 'sparkle';
+        sparkle.style.cssText = `
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: #FFD700;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            left: ${rect.left + Math.random() * rect.width}px;
+            top: ${rect.top + Math.random() * rect.height}px;
+            animation: sparkleFloat 1s ease-out forwards;
+        `;
+        
+        document.body.appendChild(sparkle);
+        
+        setTimeout(() => {
+            sparkle.remove();
+        }, 1000);
+    }
+}
+
+function createMagicEffect(element) {
+    const rect = element.getBoundingClientRect();
+    
+    for (let i = 0; i < 10; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'magic-particle';
+        particle.style.cssText = `
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: #00D4AA;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1000;
+            left: ${rect.left + rect.width / 2}px;
+            top: ${rect.top + rect.height / 2}px;
+            animation: magicBurst 1.5s ease-out forwards;
+            transform: translate(-50%, -50%);
+        `;
+        
+        document.body.appendChild(particle);
+        
+        setTimeout(() => {
+            particle.remove();
+        }, 1500);
+    }
+}
+
+// Revelação do prêmio
+function revealPrize() {
+    const prizes = ['10% DE DESCONTO', 'NÃO FOI DESSA VEZ', 'UMA CANETA'];
+    const weights = [0.3, 0.4, 0.3]; // Probabilidades
+    
+    const randomPrize = getWeightedRandom(prizes, weights);
+    selectPrize(randomPrize);
+}
+
+function getWeightedRandom(items, weights) {
+    const random = Math.random();
+    let weightSum = 0;
+    
+    for (let i = 0; i < items.length; i++) {
+        weightSum += weights[i];
+        if (random <= weightSum) {
+            return items[i];
+        }
+    }
+    
+    return items[items.length - 1];
+}
+
+// Seleção de prêmio
+function selectPrize(prize) {
+    let title, message, icon;
+    
+    switch (prize) {
+        case '10% DE DESCONTO':
+            title = 'Parabéns!';
+            message = 'Você ganhou 10% de desconto na adesão!';
+            icon = '🎉';
+            break;
+        case 'UMA CANETA':
+            title = 'Parabéns!';
+            message = 'Você ganhou uma caneta exclusiva!';
+            icon = '✏️';
+            break;
+        default:
+            title = 'Que pena!';
+            message = 'Não foi dessa vez, mas continue tentando!';
+            icon = '😔';
+    }
+    
+    showModal(title, message, icon);
+}
+
+// Navegação entre telas
+function showScreen(screenId) {
+    console.log('Mudando para tela:', screenId);
+    
+    // Esconde todas as telas
+    const telas = document.querySelectorAll('.tela');
+    telas.forEach(tela => {
+        tela.classList.remove('active');
     });
     
-    // Destacar prêmio sorteado
-    const premioItems = document.querySelectorAll('.premio-item');
-    const itemCentral = Math.floor(premioItems.length / 2);
+    // Mostra a tela selecionada
+    const targetScreen = document.getElementById(screenId);
+    if (targetScreen) {
+        targetScreen.classList.add('active');
+        currentScreen = screenId;
+        console.log('Tela ativa:', screenId);
+    } else {
+        console.error('Tela não encontrada:', screenId);
+    }
+}
+
+// Torna a função global
+window.showScreen = showScreen;
+
+function voltarInicio() {
+    showScreen('tela-cadastro');
+    resetForm();
+}
+
+function resetForm() {
+    const form = document.getElementById('form-indicacoes');
+    if (form) {
+        form.reset();
+    }
+    rubCount = 0;
+}
+
+// Modal
+function showModal(title, message, icon = '🎉') {
+    const modal = document.getElementById('modal-resultado');
+    const modalTitle = document.getElementById('modal-title');
+    const modalText = document.getElementById('modal-text');
+    const modalIcon = modal.querySelector('.modal-icon');
     
-    // Encontrar item próximo ao centro com o prêmio correto
-    for (let i = itemCentral - 2; i <= itemCentral + 2; i++) {
-        if (premioItems[i] && premioItems[i].dataset.premio === premio) {
-            premioItems[i].classList.add('destacado');
-            break;
+    if (modal && modalTitle && modalText && modalIcon) {
+        modalTitle.textContent = title;
+        modalText.textContent = message;
+        modalIcon.textContent = icon;
+        modal.classList.remove('hidden');
+    }
+}
+
+function fecharModal() {
+    const modal = document.getElementById('modal-resultado');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+    
+    // Volta para o início após fechar o modal
+    setTimeout(() => {
+        voltarInicio();
+    }, 500);
+}
+
+// Loading
+function showLoading(show) {
+    const submitBtn = document.querySelector('.submit-btn');
+    if (submitBtn) {
+        if (show) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Processando...';
+        } else {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Faça seu pedido!';
         }
     }
 }
 
-function mostrarResultado(premio) {
-    const resultadoDiv = document.getElementById('resultado-premio');
-    const textoPremio = document.getElementById('texto-premio');
+// Notificações
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 16px 24px;
+        background: ${type === 'error' ? '#ff4757' : '#00D4AA'};
+        color: white;
+        border-radius: 8px;
+        z-index: 2000;
+        font-weight: 600;
+        animation: slideIn 0.3s ease-out;
+    `;
     
-    textoPremio.textContent = premio;
-    resultadoDiv.classList.remove('hidden');
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
 }
 
-
-// === UTILITÁRIOS ===
-function mostrarErro(mensagem) {
-    const modal = document.getElementById('modal-erro');
-    const texto = document.getElementById('texto-erro');
-    
-    texto.textContent = mensagem;
-    modal.classList.remove('hidden');
-}
-
-function fecharModalErro() {
-    document.getElementById('modal-erro').classList.add('hidden');
-}
-
-function reiniciarSistema() {
-    // Resetar variáveis
-    dadosCadastrador = null;
-    leadsCount = 3;
-    
-    // Limpar formulários
-    document.getElementById('form-usuario').reset();
-    document.getElementById('form-leads').reset();
-    
-    // Restaurar botões
-    document.getElementById('btn-girar').classList.remove('hidden');
-    document.getElementById('btn-girar').disabled = false;
-    document.getElementById('btn-girar').textContent = '🎲 Girar Roleta';
-    document.getElementById('btn-reiniciar').classList.add('hidden');
-    
-    // Ocultar resultado
-    document.getElementById('resultado-premio').classList.add('hidden');
-    
-    // Restaurar displays
-    document.getElementById('form-usuario').style.display = 'block';
-    document.getElementById('loading-usuario').classList.add('hidden');
-    document.getElementById('form-leads').style.display = 'block';
-    document.getElementById('loading-leads').classList.add('hidden');
-    
-    // Recriar campos de leads
-    criarCamposLeads(3);
-    
-    // Recriar roleta
-    criarRoleta();
-    
-    // Voltar para primeira tela
-    mostrarTela('tela-usuario');
-    
-    console.log('🔄 Sistema reiniciado');
-}
-
-// === VALIDAÇÕES E FORMATAÇÕES ===
-document.addEventListener('input', function(event) {
-    // Formatação de telefone
-    if (event.target.type === 'tel') {
-        let valor = event.target.value.replace(/\D/g, '');
-        
-        if (valor.length <= 11) {
-            valor = valor.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-            event.target.value = valor;
+// Animações CSS dinâmicas
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes sparkleFloat {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px) scale(0);
         }
     }
-});
-
-// === DEBUG ===
-window.debugSistema = {
-    dadosCadastrador: () => dadosCadastrador,
-    premiosDisponiveis: () => premiosDisponiveis,
-    leadsCount: () => leadsCount,
-    reiniciarSistema
-};
-
-console.log('🚀 Sistema de Cadastro de Leads carregado!');
-console.log('💡 Use window.debugSistema para debugging');
+    
+    @keyframes magicBurst {
+        0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        100% {
+            opacity: 0;
+            transform: translate(-50%, -50%) translateX(${Math.random() * 200 - 100}px) translateY(${Math.random() * 200 - 100}px) scale(0);
+        }
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
